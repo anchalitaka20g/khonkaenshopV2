@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Order & Commission Manager - Canva Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="./script.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#0b1220] to-[#0f172a] text-slate-100"
+  >
+    <div class="max-w-7xl mx-auto p-6">
+      <!-- Header -->
+      <header
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6"
+      >
+        <div>
+          <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
+            Order & Commission Manager
+          </h1>
+          <p class="text-slate-300 mt-1">
+            Canva Codes — มินิมอล ใช้งานง่าย เชื่อม Google Sheet ด้วย JSONP
+          </p>
+        </div>
+        <!-- Quick Config -->
+        <div
+          class="bg-slate-800/60 border border-slate-700 rounded-xl p-3 md:p-4"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="shrink-0 w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-300 font-semibold"
+            >
+              CFG
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm text-slate-300">Google Apps Script URL</p>
+              <input
+                id="configEndpoint"
+                class="mt-1 w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="https://script.google.com/macros/s/.../exec"
+              />
+            </div>
+            <button
+              id="btnSaveConfig"
+              class="shrink-0 bg-indigo-500 hover:bg-indigo-600 transition-colors px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              บันทึก
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">
+            หมายเหตุ: ดึงข้อมูลผ่าน Apps Script (JSONP) เท่านั้น
+            ไม่สามารถดึงจากลิงก์แก้ไขของ Google Sheet โดยตรง
+          </p>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 mb-6">
+        <button
+          data-tab="employees"
+          class="tab-btn active bg-indigo-500 text-white hover:bg-indigo-600 px-4 py-3 rounded-xl text-sm font-medium transition-all"
+        >
+          ระบบพนักงาน
+        </button>
+        <button
+          data-tab="orders"
+          class="tab-btn bg-slate-800/70 hover:bg-slate-700 px-4 py-3 rounded-xl text-sm font-medium"
+        >
+          บันทึกออเดอร์
+        </button>
+        <button
+          data-tab="commission"
+          class="tab-btn bg-slate-800/70 hover:bg-slate-700 px-4 py-3 rounded-xl text-sm font-medium"
+        >
+          สรุปค่าคอมมิชชั่น
+        </button>
+        <button
+          data-tab="monthly"
+          class="tab-btn bg-slate-800/70 hover:bg-slate-700 px-4 py-3 rounded-xl text-sm font-medium"
+        >
+          รายงานการขายประจำเดือน
+        </button>
+        <button
+          data-tab="products"
+          class="tab-btn bg-slate-800/70 hover:bg-slate-700 px-4 py-3 rounded-xl text-sm font-medium"
+        >
+          ข้อมูลสินค้า
+        </button>
+      </nav>
+
+      <!-- Content -->
+      <main class="space-y-6">
+        <!-- Employees -->
+        <section id="tab-employees" class="tab-panel">
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <h2 class="text-xl font-semibold">ระบบพนักงาน</h2>
+              <div class="flex items-center gap-2">
+                <button
+                  id="btnSyncEmployees"
+                  class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  เรียกดูข้อมูล Google Sheet
+                </button>
+                <button
+                  id="btnSaveEmployees"
+                  class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  บันทึกข้อมูลใน Google Sheet
+                </button>
+              </div>
+            </div>
+
+            <!-- Form -->
+            <form
+              id="formEmployee"
+              class="grid md:grid-cols-5 gap-3"
+              autocomplete="off"
+            >
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >รหัสพนักงาน</label
+                >
+                <input
+                  required
+                  id="empId"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm text-slate-300 mb-1">ชื่อ</label>
+                <input
+                  required
+                  id="empName"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ค่าคอมมิชชั่น (%)</label
+                >
+                <input
+                  required
+                  id="empCommission"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1">เบอร์</label>
+                <input
+                  id="empPhone"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div class="md:col-span-5 flex gap-2">
+                <button
+                  class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  เพิ่ม/อัปเดต
+                </button>
+                <button
+                  id="btnResetEmp"
+                  type="button"
+                  class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"
+                >
+                  ล้างฟอร์ม
+                </button>
+              </div>
+            </form>
+
+            <!-- Table -->
+            <div class="mt-5 overflow-auto">
+              <table class="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr class="text-left text-slate-300">
+                    <th class="py-2">รหัส</th>
+                    <th class="py-2">ชื่อ</th>
+                    <th class="py-2">ค่าคอมฯ (%)</th>
+                    <th class="py-2">เบอร์</th>
+                    <th class="py-2 text-right">การจัดการ</th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="employeeTable"
+                  class="divide-y divide-slate-700"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Orders -->
+        <section id="tab-orders" class="tab-panel hidden">
+          <div
+            class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-5"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-semibold">บันทึกออเดอร์</h2>
+              <div class="flex items-center gap-2">
+                <button
+                  id="btnSyncOrders"
+                  class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  เรียกดูข้อมูล Google Sheet
+                </button>
+                <button
+                  id="btnSaveOrders"
+                  class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  บันทึกข้อมูลใน Google Sheet
+                </button>
+              </div>
+            </div>
+
+            <!-- Paste & Parse -->
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="block text-sm text-slate-300"
+                  >วางชุดข้อความของลูกค้า</label
+                >
+                <textarea
+                  id="rawText"
+                  rows="10"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="วางข้อความตัวอย่าง..."
+                ></textarea>
+                <div class="flex items-center gap-2">
+                  <button
+                    id="btnParse"
+                    class="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    แปรงข้อความ
+                  </button>
+                  <button
+                    id="btnClearRaw"
+                    class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"
+                  >
+                    ล้าง
+                  </button>
+                </div>
+                <p class="text-xs text-slate-400">
+                  รองรับวันที่, รายการสินค้า (ตัวอย่าง มะม่วง 2*250=500),
+                  คีย์เวิร์ด: ค่าส่ง, รวม/ยอดรวม, เย็น/ธรรมดา, ส่ง
+                  7-11/แมวดำ/แฟมิลี่, ออเดอร์/ชื่อเฟส
+                </p>
+              </div>
+
+              <!-- Order form -->
+              <form id="formOrder" class="space-y-3" autocomplete="off">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >เลขที่ออเดอร์</label
+                    >
+                    <input
+                      id="orderNo"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                      readonly
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >วันที่รับออเดอร์</label
+                    >
+                    <input
+                      id="orderDate"
+                      type="date"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ชื่อลูกค้า</label
+                    >
+                    <input
+                      id="customerName"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ชื่อแอดมิน (พนักงาน)</label
+                    >
+                    <select
+                      id="adminName"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    ></select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ขนส่ง</label
+                    >
+                    <select
+                      id="shippingName"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    >
+                      <option value="7-11">7-11</option>
+                      <option value="แมวดำ">แมวดำ</option>
+                      <option value="แฟมิลี่">แฟมิลี่</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ค่าส่ง</label
+                    >
+                    <input
+                      id="shippingFee"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ประเภทการส่ง</label
+                    >
+                    <select
+                      id="shippingType"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    >
+                      <option value="ธรรมดา">ธรรมดา</option>
+                      <option value="เย็น">เย็น</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm text-slate-300 mb-1"
+                    >ที่อยู่ลูกค้า</label
+                  >
+                  <textarea
+                    id="customerAddress"
+                    rows="3"
+                    class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                  ></textarea>
+                </div>
+
+                <!-- Items Table -->
+                <div
+                  class="bg-slate-900/40 border border-slate-700 rounded-xl p-3"
+                >
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm text-slate-300">รายการสินค้า</p>
+                    <button
+                      type="button"
+                      id="btnAddItem"
+                      class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-sm"
+                    >
+                      + เพิ่มสินค้า
+                    </button>
+                  </div>
+                  <div class="overflow-auto mt-2">
+                    <table class="w-full min-w-[560px] text-sm">
+                      <thead>
+                        <tr class="text-left text-slate-300">
+                          <th class="py-2">ชื่อสินค้า</th>
+                          <th class="py-2 w-20">จำนวน</th>
+                          <th class="py-2 w-28">ราคา/ชิ้น</th>
+                          <th class="py-2 w-28">ยอดรวม</th>
+                          <th class="py-2 text-right w-24">การจัดการ</th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        id="itemsTable"
+                        class="divide-y divide-slate-700"
+                      ></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ยอดรวม</label
+                    >
+                    <input
+                      id="grandTotal"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ส่วนลด</label
+                    >
+                    <input
+                      id="discountTotal"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value="0"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ยอดไทย (อัตราแปลง)</label
+                    >
+                    <input
+                      id="thbRate"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value="1"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-slate-300 mb-1"
+                      >ยอดไทย</label
+                    >
+                    <input
+                      id="thaiAmount"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                  <button
+                    class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    บันทึกออเดอร์ (ภายใน)
+                  </button>
+                  <button
+                    type="button"
+                    id="btnResetOrder"
+                    class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"
+                  >
+                    ล้างฟอร์ม
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Orders List -->
+            <div class="pt-2">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-slate-300">
+                  รายการออเดอร์ (แก้ไข/ลบได้)
+                </p>
+                <div class="flex gap-2">
+                  <input
+                    id="searchOrders"
+                    placeholder="ค้นหา (ชื่อลูกค้า/เลขออเดอร์)"
+                    class="bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    id="btnExportOrders"
+                    class="bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    ดาวน์โหลด JSON
+                  </button>
+                </div>
+              </div>
+              <div class="overflow-auto">
+                <table class="w-full min-w-[760px] text-sm">
+                  <thead>
+                    <tr class="text-left text-slate-300">
+                      <th class="py-2">เลขออเดอร์</th>
+                      <th class="py-2">วันที่</th>
+                      <th class="py-2">ลูกค้า</th>
+                      <th class="py-2">แอดมิน</th>
+                      <th class="py-2">ขนส่ง</th>
+                      <th class="py-2">รวม</th>
+                      <th class="py-2 text-right">การจัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="ordersTable"
+                    class="divide-y divide-slate-700"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Commission -->
+        <section id="tab-commission" class="tab-panel hidden">
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <h2 class="text-xl font-semibold">สรุปค่าคอมมิชชั่น</h2>
+              <button
+                id="btnLoadCommission"
+                class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                โหลดข้อมูลจาก Google Sheet
+              </button>
+            </div>
+            <div class="grid md:grid-cols-4 gap-3 mb-4">
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >วันที่เริ่ม</label
+                >
+                <input
+                  id="comStart"
+                  type="date"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >วันที่สิ้นสุด</label
+                >
+                <input
+                  id="comEnd"
+                  type="date"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ชื่อพนักงาน</label
+                >
+                <select
+                  id="comEmployee"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                >
+                  <option value="">ทั้งหมด</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <button
+                id="btnCalcCommission"
+                class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                คำนวณ
+              </button>
+              <button
+                id="btnExportCommission"
+                class="bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                ดาวน์โหลด CSV
+              </button>
+            </div>
+            <div class="overflow-auto">
+              <table class="w-full min-w-[680px] text-sm">
+                <thead>
+                  <tr class="text-left text-slate-300">
+                    <th class="py-2">พนักงาน</th>
+                    <th class="py-2">ยอดขายสุทธิ (หักค่าส่ง)</th>
+                    <th class="py-2">ค่าคอม (%)</th>
+                    <th class="py-2">ค่าคอมที่ต้องจ่าย</th>
+                    <th class="py-2">จำนวนออเดอร์</th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="commissionTable"
+                  class="divide-y divide-slate-700"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Monthly Report -->
+        <section id="tab-monthly" class="tab-panel hidden">
+          <div
+            class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-4"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-semibold">รายงานการขายประจำเดือน</h2>
+              <button
+                id="btnLoadMonthly"
+                class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                โหลดข้อมูลจาก Google Sheet
+              </button>
+            </div>
+            <div class="grid md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >วันที่เริ่ม</label
+                >
+                <input
+                  id="monthlyStart"
+                  type="date"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >วันที่สิ้นสุด</label
+                >
+                <input
+                  id="monthlyEnd"
+                  type="date"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div class="flex items-end">
+                <button
+                  id="btnCalcMonthly"
+                  class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium w-full"
+                >
+                  สรุปรายงาน
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-auto">
+              <table class="w-full min-w-[840px] text-sm">
+                <thead>
+                  <tr class="text-left text-slate-300">
+                    <th class="py-2">เดือน</th>
+                    <th class="py-2">ยอดขายรวม</th>
+                    <th class="py-2">จำนวนออเดอร์</th>
+                    <th class="py-2">7-11 (ยอด/ออเดอร์)</th>
+                    <th class="py-2">แฟมิลี่ (ยอด/ออเดอร์)</th>
+                    <th class="py-2">แมวดำ (ยอด/ออเดอร์)</th>
+                    <th class="py-2">กำไร</th>
+                    <th class="py-2">ขาดทุน</th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="monthlyTable"
+                  class="divide-y divide-slate-700"
+                ></tbody>
+              </table>
+            </div>
+
+            <div>
+              <h3 class="font-semibold mb-2">สินค้าขายดีประจำเดือน</h3>
+              <div id="topProducts" class="grid md:grid-cols-3 gap-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Products -->
+        <section id="tab-products" class="tab-panel hidden">
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <h2 class="text-xl font-semibold">ข้อมูลสินค้า</h2>
+              <div class="flex items-center gap-2">
+                <button
+                  id="btnSyncProducts"
+                  class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  เรียกดูข้อมูล Google Sheet
+                </button>
+                <button
+                  id="btnSaveProducts"
+                  class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  บันทึกข้อมูลใน Google Sheet
+                </button>
+              </div>
+            </div>
+            <form
+              id="formProduct"
+              class="grid md:grid-cols-4 gap-3"
+              autocomplete="off"
+            >
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >รหัสสินค้า</label
+                >
+                <input
+                  required
+                  id="prdId"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm text-slate-300 mb-1">ชื่อ</label>
+                <input
+                  required
+                  id="prdName"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1">น้ำหนัก</label>
+                <input
+                  id="prdWeight"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ราคาต้นทุน</label
+                >
+                <input
+                  id="prdCost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ราคาขายปลีก</label
+                >
+                <input
+                  id="prdRetail"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ราคาขายส่ง</label
+                >
+                <input
+                  id="prdWholesale"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >ราคาขายเป็นเซต</label
+                >
+                <input
+                  id="prdSet"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >จำนวนรับเข้า</label
+                >
+                <input
+                  id="prdIn"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1"
+                  >จำนวนคงเหลือ</label
+                >
+                <input
+                  id="prdStock"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm text-slate-300 mb-1"
+                  >เลขบาร์โค้ด</label
+                >
+                <input
+                  id="prdBarcode"
+                  class="w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div class="md:col-span-4 flex gap-2">
+                <button
+                  class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  เพิ่ม/อัปเดต
+                </button>
+                <button
+                  id="btnResetPrd"
+                  type="button"
+                  class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"
+                >
+                  ล้างฟอร์ม
+                </button>
+                <input
+                  id="searchProducts"
+                  placeholder="ค้นหาสินค้า..."
+                  class="ml-auto bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </form>
+
+            <div class="mt-5 overflow-auto">
+              <table class="w-full min-w-[880px] text-sm">
+                <thead>
+                  <tr class="text-left text-slate-300">
+                    <th class="py-2">รหัส</th>
+                    <th class="py-2">ชื่อ</th>
+                    <th class="py-2">ต้นทุน</th>
+                    <th class="py-2">ปลีก</th>
+                    <th class="py-2">คงเหลือ</th>
+                    <th class="py-2">บาร์โค้ด</th>
+                    <th class="py-2 text-right">การจัดการ</th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="productsTable"
+                  class="divide-y divide-slate-700"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Global Loading Overlay -->
+      <div
+        id="globalLoading"
+        class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50"
+      >
+        <div
+          class="bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 flex items-center gap-3"
+        >
+          <div class="spinner"></div>
+          <p class="text-sm">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'98279a6ad0c32603',t:'MTc1ODQzNzE2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
